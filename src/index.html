@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Les physiothérapeutes du Québec</title>
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <!-- Importation de la clé API -->
+    <script src="./assets/data/cleAPI.js"></script>
+    <!-- Intégration de Bootstrap -->
+    <link rel="stylesheet" href="./assets/styles/bootstrap.min.css" />
+    <script src="./assets/scripts/bootstrap.bundle.min.js"></script>
+    <!-- Load Leaflet from CDN -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
+
+    <!-- Load Esri Leaflet from CDN -->
+    <script
+      src="https://unpkg.com/esri-leaflet@3.0.4/dist/esri-leaflet.js"
+      integrity="sha512-oUArlxr7VpoY7f/dd3ZdUL7FGOvS79nXVVQhxlg6ij4Fhdc4QID43LUFRs7abwHNJ0EYWijiN5LP2ZRR2PY4hQ=="
+      crossorigin=""
+    ></script>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/esri-leaflet-geocoder@3.0.0/dist/esri-leaflet-geocoder.css"
+    />
+    <script src=" https://unpkg.com/esri-leaflet-geocoder@3.0.0/dist/esri-leaflet-geocoder.js"></script>
+
+    <!-- Load Esri Leaflet Vector from CDN -->
+    <script
+      src="https://unpkg.com/esri-leaflet-vector@3.1.1/dist/esri-leaflet-vector.js"
+      integrity="sha512-7rLAors9em7cR3/583gZSvu1mxwPBUjWjdFJ000pc4Wpu+fq84lXF1l4dbG4ShiPQ4pSBUTb4e9xaO6xtMZIlA=="
+      crossorigin=""
+    ></script>
+    <script src="./assets/data/infoMembres.js"></script>
+
+    <!-- Esri Légende -->
+    <script src="assets/scripts/esri-leaflet-legend-compat-src.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+      }
+      h3 {
+        font-size: 1.4rem;
+      }
+      h4 {
+        font-size: 1.3rem;
+      }
+      h5 {
+        font-size: 1.2rem;
+      }
+      /* Titre et nom */
+      .leaflet-titre {
+        background: white;
+        padding: 1em;
+        max-height: 300px;
+        overflow: auto;
+        font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+      }
+
+      #titre {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 401;
+        background-color: rgba(255, 255, 255, 0.685);
+        padding: 10px 15px;
+        border-radius: 10px;
+      }
+      /* Légende */
+      .leaflet-legend-control {
+        background: white;
+        padding: 1em;
+        max-height: 300px;
+        overflow: auto;
+        font: 12px/1.5 "Helvetica Neue", Arial, Helvetica, sans-serif;
+      }
+
+      .leaflet-legend-control ul {
+        padding: 0;
+        margin: 0;
+        list-style-type: none;
+      }
+
+      .leaflet-legend-control ul li img {
+        display: inline-block;
+        margin-right: 5px;
+      }
+
+      .leaflet-legend-control ul li span {
+        vertical-align: top;
+        line-height: 22px;
+      }
+
+      .leaflet-legend-control ul ul {
+        margin-left: 15px;
+      }
+
+      #legend {
+        position: absolute;
+        bottom: 30px;
+        right: 15px;
+        z-index: 401;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="titre">
+      <h1>Les membres de l'<abbr title="Ordre professionel de la physiothérapie du Québec">OPPQ</abbr></h1>
+      <h6>Par Dale Limoges</h6>
+    </div>
+    <div id="legend">
+      <img src="./assets/images/legend.png" alt="" />
+    </div>
+    <div id="map"></div>
+
+    <script>
+      const CLE_API = cleAPI;
+      
+      //initialisation de la carte 
+      let map = L.map("map").setView([45.5141883930879, -73.6410453900635], 12);
+
+      //baseMaps
+      const topographique = L.esri.Vector.vectorBasemapLayer(
+        "ArcGIS:Topographic",
+        {
+          apikey: CLE_API,
+        }
+      );
+      const rues = L.esri.Vector.vectorBasemapLayer("ArcGIS:Streets", {
+        apikey: CLE_API,
+      });
+      rues.addTo(map);
+
+      const baseLayers = {
+        Rues: rues,
+        Topographique: topographique,
+      };
+      
+
+      const diamantIcone = L.icon({
+        iconUrl: "./assets/images/diamant.png",
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        popupAnchor: [-2, -2],
+      });
+
+      let coucheMembres = L.layerGroup();
+
+      L.geoJSON(infoMembres, {
+        pointToLayer: function (feature, latlng) {
+          if (feature.properties.ICONE_SRC) {
+            return L.marker(latlng, {
+              icon: L.icon({
+                iconUrl: feature.properties.ICONE_SRC,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+                popupAnchor: [-2, -2],
+              }),
+            });
+          } else {
+            console.log("Erreur: l'élément n'a pas d'icone définie");
+            return L.marker(latlng, {
+              icon: diamantIcone,
+            });
+          }
+        },
+      })
+        .bindPopup(function (layer) {
+          return `
+            <div class="card" style="width: 18rem">
+        <h5 class="card-title">
+          ${layer.feature.properties.NOM} - Fiche descriptive
+        </h5>
+        <img
+          class="card-img-top p-2"
+          src="${layer.feature.properties.IMG_SRC}"
+          alt="${layer.feature.properties.IMG_ALT}"
+        />
+        <div class="card-body">
+          <div class="row my-2">
+            <div class="col-6">
+              <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+              <div class="row">
+                <h5>${layer.feature.properties.TITRE}</h5>
+              </div>
+              <div class="row">
+                Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="row"><h5>Adresse complète :</h5></div>
+              <div class="row">${layer.feature.properties.ADRESSE}</div>
+              <div class="row">${layer.feature.properties.VILLE}</div>
+              <div class="row">
+                ${layer.feature.properties.PROVINCE},
+                ${layer.feature.properties.CODE_POSTAL}
+              </div>
+            </div>
+          </div>
+          <div class="row my-2">
+            <div class="col-12">
+              <a href="${layer.feature.properties.TELEPHONE_REF}"
+                >${layer.feature.properties.TELEPHONE}</a
+              >
+            </div>
+            <div class="col-12">
+              <a href="mail:${layer.feature.properties.COURRIEL}"
+                >${layer.feature.properties.TELEPHONE_REF}</a
+              >
+            </div>
+            <div class="col-12">
+              <a href="${layer.feature.properties.SITE_WEB}"
+                >${layer.feature.properties.SITE_WEB}</a
+              >
+            </div>
+          </div>
+          <div class="row my-2">
+            <div class="col-12">
+              <p>${layer.feature.properties.SOMMAIRE}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+            `;
+        })
+        .addTo(coucheMembres);
+
+      //Couches Feature
+
+      const tt = L.esri.featureLayer({
+        url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Earthquakes_Since1970/MapServer/0",
+      });
+      const overlays = {
+        "Tremblements de terre": tt,
+        "Membres": coucheMembres,
+      };
+
+      L.control.scale({ imperial: false, maxWidth: 500 }).addTo(map);
+
+      L.control.layers(baseLayers, overlays).addTo(map);
+
+      //Pour la recherche
+
+      const couchePoints = L.layerGroup();
+      couchePoints.addTo(map);
+      const searchControl = L.esri.Geocoding.geosearch({
+        position: "topleft",
+        placeholder: "Entrer une adresse",
+        useMapBounds: false,
+        providers: [
+          L.esri.Geocoding.arcgisOnlineProvider({
+            apikey: CLE_API,
+            nearby: {
+              lat: 45,
+              lng: -73,
+            },
+          }),
+        ],
+      }).addTo(map);
+
+      searchControl.on("results", (data) => {
+        for (let i = 0; i < data.results.length; i++) {
+          couchePoints.clearLayers();
+          let marqueur = L.marker(data.results[i].latlng);
+          marqueur.bindPopup(data.results[i].text).openPopup();
+          marqueur.addTo(couchePoints);
+        }
+      });
+    </script>
+  </body>
+</html>
