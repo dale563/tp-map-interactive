@@ -5,8 +5,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 1,
-        "tous":true,
-        "0009":true,
+        "c0009":true,
         "ICONE_SRC":"./assets/images/00-09.png",
         "IMG_SRC":"./assets/images/membre-1.jpg",
         "IMG_ALT":"alt-01",
@@ -32,8 +31,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 2,
-        "tous":true,
-        "9099":true,
+        "c9099":true,
         "ICONE_SRC":"./assets/images/90-99.png",
         "IMG_SRC":"./assets/images/membre-2.jpg",
         "IMG_ALT":"alt-02",
@@ -59,8 +57,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 3,
-        "tous":true,
-        "9099":true,
+        "c9099":true,
         "ICONE_SRC":"./assets/images/90-99.png",
         "IMG_SRC":"./assets/images/membre-3.jpg",
         "IMG_ALT":"alt-02",
@@ -86,7 +83,6 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 4,
-        "tous":true,
         "avant1990":true,
         "ICONE_SRC":"./assets/images/avant1990.png",
         "IMG_SRC":"./assets/images/membre-4.jpg",
@@ -113,6 +109,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 5,
+        "c0009":true,
         "ICONE_SRC":"./assets/images/00-09.png",
         "IMG_SRC":"./assets/images/membre-5.jpg",
         "IMG_ALT":"alt-02",
@@ -138,6 +135,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 6,
+        "c1019":true,
         "ICONE_SRC":"./assets/images/10-19.png",
         "IMG_SRC":"./assets/images/membre-6.jpg",
         "IMG_ALT":"alt-02",
@@ -163,6 +161,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 7,
+        "av1990":true,
         "ICONE_SRC":"./assets/images/avant1990.png",
         "IMG_SRC":"./assets/images/membre-7.jpg",
         "IMG_ALT":"alt-02",
@@ -188,6 +187,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 8,
+        "av1990":true,
         "ICONE_SRC":"./assets/images/avant1990.png",
         "IMG_SRC":"./assets/images/membre-8.jpg",
         "IMG_ALT":"alt-02",
@@ -213,6 +213,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 9,
+        "av1990":true,
         "ICONE_SRC":"./assets/images/avant1990.png",
         "IMG_SRC":"./assets/images/membre-9.jpg",
         "IMG_ALT":"alt-02",
@@ -238,6 +239,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 10,
+        "c0009":true,
         "ICONE_SRC":"./assets/images/00-09.png",
         "IMG_SRC":"./assets/images/membre-10.jpg",
         "IMG_ALT":"alt-02",
@@ -263,6 +265,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 11,
+        "c9099":true,
         "ICONE_SRC":"./assets/images/90-99.png",
         "IMG_SRC":"./assets/images/membre-11.jpg",
         "IMG_ALT":"alt-02",
@@ -288,6 +291,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 12,
+        "c1019":true,
         "ICONE_SRC":"./assets/images/10-19.png",
         "IMG_SRC":"./assets/images/membre-12.jpg",
         "IMG_ALT":"alt-02",
@@ -313,6 +317,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 13,
+        "c1019":true,
         "ICONE_SRC":"./assets/images/10-19.png",
         "IMG_SRC":"./assets/images/membre-13.jpg",
         "IMG_ALT":"alt-02",
@@ -338,6 +343,7 @@ let infoMembres = {
       "type": "Feature",
       "properties": {
         "ID": 14,
+        "av1990":true,
         "ICONE_SRC":"./assets/images/avant1990.png",
         "IMG_SRC":"./assets/images/membre-14.jpg",
         "IMG_ALT":"alt-02",
