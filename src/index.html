@@ -126,6 +126,9 @@
       .leaflet-legend-control ul ul {
         margin-left: 15px;
       }
+      .leaflet-popup .leaflet-popup-content-wrapper {
+        z-index: 1000 !important;
+      }
 
       #legend {
         position: absolute;
@@ -136,9 +139,9 @@
 
       #query {
         position: absolute;
-        top: 11px;
-        left: 55px;
-        z-index: 1000;
+        bottom: 290px;
+        right: 10px;
+        z-index: 990;
         background: rgba(255, 255, 255, 0.664);
         padding: 1em;
       }
@@ -189,7 +192,7 @@
         </select> -->
         <select id="requete">
           <!-- make sure to encase string values in single quotes for valid sql -->
-          <option value="tous">Tous</option>
+          <option value="tous" selected>Tous</option>
           <option value="avant1990">Avant 1990</option>
           <option value="9099">1990-1999</option>
           <option value="0009">2000-2009</option>
@@ -232,28 +235,27 @@
 
       let coucheMembres = L.layerGroup();
 
-      const construireCoucheMembre = () => {
-        L.geoJSON(infoMembres, {
-          pointToLayer: function (feature, latlng) {
-            if (feature.properties.ICONE_SRC) {
-              return L.marker(latlng, {
-                icon: L.icon({
-                  iconUrl: feature.properties.ICONE_SRC,
-                  iconSize: [20, 20],
-                  iconAnchor: [10, 10],
-                  popupAnchor: [-2, -2],
-                }),
-              });
-            } else {
-              console.log("Erreur: l'élément n'a pas d'icone définie");
-              return L.marker(latlng, {
-                icon: diamantIcone,
-              });
-            }
-          },
-        })
-          .bindPopup(function (layer) {
-            return `
+      L.geoJSON(infoMembres, {
+        pointToLayer: function (feature, latlng) {
+          if (feature.properties.ICONE_SRC) {
+            return L.marker(latlng, {
+              icon: L.icon({
+                iconUrl: feature.properties.ICONE_SRC,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10],
+                popupAnchor: [-2, -2],
+              }),
+            });
+          } else {
+            console.log("Erreur: l'élément n'a pas d'icone définie");
+            return L.marker(latlng, {
+              icon: diamantIcone,
+            });
+          }
+        },
+      })
+        .bindPopup(function (layer) {
+          return `
             <div class="card" style="width: 18rem">
         <h5 class="card-title">
           ${layer.feature.properties.NOM} - Fiche descriptive
@@ -309,9 +311,512 @@
         </div>
       </div>
             `;
-          })
-          .addTo(coucheMembres);
-      };
+        })
+        .addTo(coucheMembres);
+
+     //Choix selon ancienneté
+      const requete = document.getElementById("requete");
+      requete.addEventListener("change", () => {
+        coucheMembres.clearLayers();
+        switch (requete.value) {
+          case "tous":
+            L.geoJSON(infoMembres, {
+              pointToLayer: function (feature, latlng) {
+                if (feature.properties.ICONE_SRC) {
+                  return L.marker(latlng, {
+                    icon: L.icon({
+                      iconUrl: feature.properties.ICONE_SRC,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                      popupAnchor: [-2, -2],
+                    }),
+                  });
+                } else {
+                  console.log("Erreur: l'élément n'a pas d'icone définie");
+                  return L.marker(latlng, {
+                    icon: diamantIcone,
+                  });
+                }
+              },
+            })
+              .bindPopup(function (layer) {
+                return `
+                      <div class="card" style="width: 18rem">
+                  <h5 class="card-title">
+                    ${layer.feature.properties.NOM} - Fiche descriptive
+                  </h5>
+                  <img
+                    class="card-img-top p-2"
+                    src="${layer.feature.properties.IMG_SRC}"
+                    alt="${layer.feature.properties.IMG_ALT}"
+                  />
+                  <div class="card-body">
+                    <div class="row my-2">
+                      <div class="col-6">
+                        <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+                        <div class="row">
+                          <h5>${layer.feature.properties.TITRE}</h5>
+                        </div>
+                        <div class="row">
+                          Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row"><h5>Adresse complète :</h5></div>
+                        <div class="row">${layer.feature.properties.ADRESSE}</div>
+                        <div class="row">${layer.feature.properties.VILLE}</div>
+                        <div class="row">
+                          ${layer.feature.properties.PROVINCE},
+                          ${layer.feature.properties.CODE_POSTAL}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.TELEPHONE_REF}"
+                          >${layer.feature.properties.TELEPHONE}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="mail:${layer.feature.properties.COURRIEL}"
+                          >${layer.feature.properties.TELEPHONE_REF}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.SITE_WEB}"
+                          >${layer.feature.properties.SITE_WEB}</a
+                        >
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <p>${layer.feature.properties.SOMMAIRE}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                      `;
+              })
+              .addTo(coucheMembres);
+            break;
+          case "avant1990":
+          L.geoJSON(infoMembres, {
+              filter: function (feature, layer) {
+                return feature.properties.avant1990;
+              },
+              pointToLayer: function (feature, latlng) {
+                if (feature.properties.ICONE_SRC) {
+                  return L.marker(latlng, {
+                    icon: L.icon({
+                      iconUrl: feature.properties.ICONE_SRC,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                      popupAnchor: [-2, -2],
+                    }),
+                  });
+                } else {
+                  console.log("Erreur: l'élément n'a pas d'icone définie");
+                  return L.marker(latlng, {
+                    icon: diamantIcone,
+                  });
+                }
+              },
+            })
+              .bindPopup(function (layer) {
+                return `
+                      <div class="card" style="width: 18rem">
+                  <h5 class="card-title">
+                    ${layer.feature.properties.NOM} - Fiche descriptive
+                  </h5>
+                  <img
+                    class="card-img-top p-2"
+                    src="${layer.feature.properties.IMG_SRC}"
+                    alt="${layer.feature.properties.IMG_ALT}"
+                  />
+                  <div class="card-body">
+                    <div class="row my-2">
+                      <div class="col-6">
+                        <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+                        <div class="row">
+                          <h5>${layer.feature.properties.TITRE}</h5>
+                        </div>
+                        <div class="row">
+                          Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row"><h5>Adresse complète :</h5></div>
+                        <div class="row">${layer.feature.properties.ADRESSE}</div>
+                        <div class="row">${layer.feature.properties.VILLE}</div>
+                        <div class="row">
+                          ${layer.feature.properties.PROVINCE},
+                          ${layer.feature.properties.CODE_POSTAL}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.TELEPHONE_REF}"
+                          >${layer.feature.properties.TELEPHONE}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="mail:${layer.feature.properties.COURRIEL}"
+                          >${layer.feature.properties.TELEPHONE_REF}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.SITE_WEB}"
+                          >${layer.feature.properties.SITE_WEB}</a
+                        >
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <p>${layer.feature.properties.SOMMAIRE}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                      `;
+              })
+              .addTo(coucheMembres);
+            break;
+          case "9099":
+          L.geoJSON(infoMembres, {
+              filter: function (feature, layer) {
+                return feature.properties.c9099;
+              },
+              pointToLayer: function (feature, latlng) {
+                if (feature.properties.ICONE_SRC) {
+                  return L.marker(latlng, {
+                    icon: L.icon({
+                      iconUrl: feature.properties.ICONE_SRC,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                      popupAnchor: [-2, -2],
+                    }),
+                  });
+                } else {
+                  console.log("Erreur: l'élément n'a pas d'icone définie");
+                  return L.marker(latlng, {
+                    icon: diamantIcone,
+                  });
+                }
+              },
+            })
+              .bindPopup(function (layer) {
+                return `
+                      <div class="card" style="width: 18rem">
+                  <h5 class="card-title">
+                    ${layer.feature.properties.NOM} - Fiche descriptive
+                  </h5>
+                  <img
+                    class="card-img-top p-2"
+                    src="${layer.feature.properties.IMG_SRC}"
+                    alt="${layer.feature.properties.IMG_ALT}"
+                  />
+                  <div class="card-body">
+                    <div class="row my-2">
+                      <div class="col-6">
+                        <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+                        <div class="row">
+                          <h5>${layer.feature.properties.TITRE}</h5>
+                        </div>
+                        <div class="row">
+                          Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row"><h5>Adresse complète :</h5></div>
+                        <div class="row">${layer.feature.properties.ADRESSE}</div>
+                        <div class="row">${layer.feature.properties.VILLE}</div>
+                        <div class="row">
+                          ${layer.feature.properties.PROVINCE},
+                          ${layer.feature.properties.CODE_POSTAL}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.TELEPHONE_REF}"
+                          >${layer.feature.properties.TELEPHONE}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="mail:${layer.feature.properties.COURRIEL}"
+                          >${layer.feature.properties.TELEPHONE_REF}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.SITE_WEB}"
+                          >${layer.feature.properties.SITE_WEB}</a
+                        >
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <p>${layer.feature.properties.SOMMAIRE}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                      `;
+              })
+              .addTo(coucheMembres);
+            break;
+          case "0009":
+          L.geoJSON(infoMembres, {
+              filter: function (feature, layer) {
+                return feature.properties.c0009;
+              },
+              pointToLayer: function (feature, latlng) {
+                if (feature.properties.ICONE_SRC) {
+                  return L.marker(latlng, {
+                    icon: L.icon({
+                      iconUrl: feature.properties.ICONE_SRC,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                      popupAnchor: [-2, -2],
+                    }),
+                  });
+                } else {
+                  console.log("Erreur: l'élément n'a pas d'icone définie");
+                  return L.marker(latlng, {
+                    icon: diamantIcone,
+                  });
+                }
+              },
+            })
+              .bindPopup(function (layer) {
+                return `
+                      <div class="card" style="width: 18rem">
+                  <h5 class="card-title">
+                    ${layer.feature.properties.NOM} - Fiche descriptive
+                  </h5>
+                  <img
+                    class="card-img-top p-2"
+                    src="${layer.feature.properties.IMG_SRC}"
+                    alt="${layer.feature.properties.IMG_ALT}"
+                  />
+                  <div class="card-body">
+                    <div class="row my-2">
+                      <div class="col-6">
+                        <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+                        <div class="row">
+                          <h5>${layer.feature.properties.TITRE}</h5>
+                        </div>
+                        <div class="row">
+                          Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row"><h5>Adresse complète :</h5></div>
+                        <div class="row">${layer.feature.properties.ADRESSE}</div>
+                        <div class="row">${layer.feature.properties.VILLE}</div>
+                        <div class="row">
+                          ${layer.feature.properties.PROVINCE},
+                          ${layer.feature.properties.CODE_POSTAL}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.TELEPHONE_REF}"
+                          >${layer.feature.properties.TELEPHONE}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="mail:${layer.feature.properties.COURRIEL}"
+                          >${layer.feature.properties.TELEPHONE_REF}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.SITE_WEB}"
+                          >${layer.feature.properties.SITE_WEB}</a
+                        >
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <p>${layer.feature.properties.SOMMAIRE}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                      `;
+              })
+              .addTo(coucheMembres);
+            break;
+          case "1019":
+          L.geoJSON(infoMembres, {
+              filter: function (feature, layer) {
+                return feature.properties.c1019;
+              },
+              pointToLayer: function (feature, latlng) {
+                if (feature.properties.ICONE_SRC) {
+                  return L.marker(latlng, {
+                    icon: L.icon({
+                      iconUrl: feature.properties.ICONE_SRC,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                      popupAnchor: [-2, -2],
+                    }),
+                  });
+                } else {
+                  console.log("Erreur: l'élément n'a pas d'icone définie");
+                  return L.marker(latlng, {
+                    icon: diamantIcone,
+                  });
+                }
+              },
+            })
+              .bindPopup(function (layer) {
+                return `
+                      <div class="card" style="width: 18rem">
+                  <h5 class="card-title">
+                    ${layer.feature.properties.NOM} - Fiche descriptive
+                  </h5>
+                  <img
+                    class="card-img-top p-2"
+                    src="${layer.feature.properties.IMG_SRC}"
+                    alt="${layer.feature.properties.IMG_ALT}"
+                  />
+                  <div class="card-body">
+                    <div class="row my-2">
+                      <div class="col-6">
+                        <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+                        <div class="row">
+                          <h5>${layer.feature.properties.TITRE}</h5>
+                        </div>
+                        <div class="row">
+                          Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row"><h5>Adresse complète :</h5></div>
+                        <div class="row">${layer.feature.properties.ADRESSE}</div>
+                        <div class="row">${layer.feature.properties.VILLE}</div>
+                        <div class="row">
+                          ${layer.feature.properties.PROVINCE},
+                          ${layer.feature.properties.CODE_POSTAL}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.TELEPHONE_REF}"
+                          >${layer.feature.properties.TELEPHONE}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="mail:${layer.feature.properties.COURRIEL}"
+                          >${layer.feature.properties.TELEPHONE_REF}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.SITE_WEB}"
+                          >${layer.feature.properties.SITE_WEB}</a
+                        >
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <p>${layer.feature.properties.SOMMAIRE}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                      `;
+              })
+              .addTo(coucheMembres);
+            break;
+          case "ap2019":
+          L.geoJSON(infoMembres, {
+              filter: function (feature, layer) {
+                return feature.properties.ap2019;
+              },
+              pointToLayer: function (feature, latlng) {
+                if (feature.properties.ICONE_SRC) {
+                  return L.marker(latlng, {
+                    icon: L.icon({
+                      iconUrl: feature.properties.ICONE_SRC,
+                      iconSize: [20, 20],
+                      iconAnchor: [10, 10],
+                      popupAnchor: [-2, -2],
+                    }),
+                  });
+                } else {
+                  console.log("Erreur: l'élément n'a pas d'icone définie");
+                  return L.marker(latlng, {
+                    icon: diamantIcone,
+                  });
+                }
+              },
+            })
+              .bindPopup(function (layer) {
+                return `
+                      <div class="card" style="width: 18rem">
+                  <h5 class="card-title">
+                    ${layer.feature.properties.NOM} - Fiche descriptive
+                  </h5>
+                  <img
+                    class="card-img-top p-2"
+                    src="${layer.feature.properties.IMG_SRC}"
+                    alt="${layer.feature.properties.IMG_ALT}"
+                  />
+                  <div class="card-body">
+                    <div class="row my-2">
+                      <div class="col-6">
+                        <div class="row"><h3>${layer.feature.properties.NOM}</h3></div>
+                        <div class="row">
+                          <h5>${layer.feature.properties.TITRE}</h5>
+                        </div>
+                        <div class="row">
+                          Membre depuis ${layer.feature.properties.MEMBRE_DEPUIS}
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="row"><h5>Adresse complète :</h5></div>
+                        <div class="row">${layer.feature.properties.ADRESSE}</div>
+                        <div class="row">${layer.feature.properties.VILLE}</div>
+                        <div class="row">
+                          ${layer.feature.properties.PROVINCE},
+                          ${layer.feature.properties.CODE_POSTAL}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.TELEPHONE_REF}"
+                          >${layer.feature.properties.TELEPHONE}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="mail:${layer.feature.properties.COURRIEL}"
+                          >${layer.feature.properties.TELEPHONE_REF}</a
+                        >
+                      </div>
+                      <div class="col-12">
+                        <a href="${layer.feature.properties.SITE_WEB}"
+                          >${layer.feature.properties.SITE_WEB}</a
+                        >
+                      </div>
+                    </div>
+                    <div class="row my-2">
+                      <div class="col-12">
+                        <p>${layer.feature.properties.SOMMAIRE}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                      `;
+              })
+              .addTo(coucheMembres);
+            break;
+        }
+      });
+
 
       //Couches Feature
 
@@ -319,8 +824,40 @@
         url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Wildfire/FeatureServer/0",
       });
 
+         //météo
+         const urlMeteo = "http://api.openweathermap.org/data/2.5/weather?q=Montreal&units=metric&lang=fr&appid=6b72d6bd84530d99e62607517091f2aa";
+
+const meteo = L.layerGroup();
+// meteo.addTo(map);
+
+let xhttp = new XMLHttpRequest();
+//Callback au changement d'état
+xhttp.onreadystatechange = function () {
+    if (xhttp.readyState == 4 && this.status == 200) {
+        let fichierJSON = JSON.parse(xhttp.responseText);
+        afficheMeteo({
+            temperature: fichierJSON.main.temp,
+            description: fichierJSON.weather[0].description,
+            urlIcon: `http://openweathermap.org/img/w/${fichierJSON.weather[0].icon}.png`, 
+            coords:fichierJSON.coord
+        })
+    };
+}
+xhttp.open("GET", urlMeteo);
+xhttp.send();
+
+function afficheMeteo(objMeteo){
+    let centre = L.latLng(objMeteo.coords.lat, objMeteo.coords.lon);
+    let label = L.marker(centre,{
+        icon: L.divIcon({
+            className: 'label',
+            html: '<div><img src="' + objMeteo.urlIcon + '" title="' + objMeteo.description + '"><p>' + objMeteo.temperature + ' C&deg;</p></div>'})
+    }).addTo(meteo);
+}
+
       const overlays = {
-        "Membres": coucheMembres,
+        "Membres OPPQ": coucheMembres,
+        "Météo Montréal": meteo,
         "Feux de forêt": ff,
       };
 
@@ -355,45 +892,8 @@
           marqueur.addTo(couchePoints);
         }
       });
-      //Choix selon ancienneté
-      const requete = document.getElementById("requete");
-      // requete.addEventListener('change', ()=> coucheMembres.setWhere(requete.value));
-      // <option value="tous">Tous</option>
-      //     <option value="avant1990">
-      //       Avant 1990
-      //     </option>
-      //     <option value="9099">1990-1999</option>
-      //     <option value="0009">2000-2009</option>
-      //     <option value="1019">2010-2019</option>
-      //     <option value="ap2019">Après 2019</option>
 
-      // requete.addEventListener("change", () => {
-      //   // const valeurRequete = requete.value;
-      //   // L.geoJSON(infoMembres, {
-      //   //   filter: function (feature, layer) {
-      //   //     console.log(valeurRequete)
-      //   //     return feature.properties.valeurRequete;
-      //   //   },
-      //   // }).addTo(map);
-
-      //   switch (requete.value) {
-      //     case "tous":
-      //       L.geoJSON(infoMembres, {
-      //         filter: function (feature, layer) {
-      //           return feature.properties.tous;
-      //         },
-      //       }).addTo(map);
-      //       break;
-      //     case "avant1990":
-      //     L.geoJSON(infoMembres, {
-      //         filter: function (feature, layer) {
-      //           return feature.properties.avant1990;
-      //         },
-      //       }).addTo(map);
-      //   }
-      // });
-
-      // Nous localise
+           // Nous localise
 
       let localisation = document.getElementById("localisation");
       localisation.addEventListener("click", function () {
@@ -409,7 +909,7 @@
         console.log(e.latlng);
         let marqueur = L.marker(e.latlng)
           .addTo(map)
-          .bindPopup("Je suis ici")
+          .bindPopup("Vous êtes ici")
           .openPopup();
       }
 
@@ -417,6 +917,9 @@
         localisation.disabled = false;
         alert(e.message);
       }
+
+
+   
     </script>
   </body>
 </html>
