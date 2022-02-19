@@ -49,6 +49,15 @@
     <!-- Esri Légende -->
     <script src="assets/scripts/esri-leaflet-legend-compat-src.js"></script>
 
+    <!-- Esri Leaflet Geocoder -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/esri-leaflet-geocoder/dist/esri-leaflet-geocoder.css"
+    />
+    <script src="https://unpkg.com/esri-leaflet-geocoder"></script>
+
+    <script src="https://unpkg.com/esri-leaflet-renderers@2.0.6"></script>
+
     <style>
       body {
         margin: 0;
@@ -124,22 +133,77 @@
         right: 15px;
         z-index: 401;
       }
+
+      #query {
+        position: absolute;
+        top: 11px;
+        left: 55px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.664);
+        padding: 1em;
+      }
+
+      #query select {
+        font-size: 16px;
+      }
+
+      #localisation {
+        position: absolute;
+        top: 125px;
+        left: 10px;
+        z-index: 1000;
+        background-color: rgba(255, 255, 255);
+        padding: 0.1em;
+        border: solid 0.15rem rgb(180, 180, 180);
+      }
     </style>
   </head>
   <body>
     <div id="titre">
-      <h1>Les membres de l'<abbr title="Ordre professionel de la physiothérapie du Québec">OPPQ</abbr></h1>
+      <h1>
+        Les membres de l'<abbr
+          title="Ordre professionel de la physiothérapie du Québec"
+          >OPPQ</abbr
+        >
+      </h1>
       <h6>Par Dale Limoges</h6>
     </div>
+    <button class="btn" id="localisation">
+      <img src="./assets/images/localiser.png" alt="" />
+    </button>
     <div id="legend">
       <img src="./assets/images/legend.png" alt="" />
+    </div>
+    <div id="query" class="leaflet-bar">
+      <label>
+        Ancienneté :
+        <!-- <select id="requete">
+          <option value="1=1">Tous</option>
+          <option value="ICONE_SRC='./assets/images/avant1990'">
+            Avant 1990
+          </option>
+          <option value="ICONE_SRC='./assets/images/90-99'">1990-1999</option>
+          <option value="ICONE_SRC='./assets/images/00-09'">2000-2009</option>
+          <option value="ICONE_SRC='./assets/images/10-19'">2010-2019</option>
+          <option value="ICONE_SRC='./assets/images/ap2019'">Après 2019</option>
+        </select> -->
+        <select id="requete">
+          <!-- make sure to encase string values in single quotes for valid sql -->
+          <option value="tous">Tous</option>
+          <option value="avant1990">Avant 1990</option>
+          <option value="9099">1990-1999</option>
+          <option value="0009">2000-2009</option>
+          <option value="1019">2010-2019</option>
+          <option value="ap2019">Après 2019</option>
+        </select>
+      </label>
     </div>
     <div id="map"></div>
 
     <script>
       const CLE_API = cleAPI;
-      
-      //initialisation de la carte 
+
+      //initialisation de la carte
       let map = L.map("map").setView([45.5141883930879, -73.6410453900635], 12);
 
       //baseMaps
@@ -158,7 +222,6 @@
         Rues: rues,
         Topographique: topographique,
       };
-      
 
       const diamantIcone = L.icon({
         iconUrl: "./assets/images/diamant.png",
@@ -169,27 +232,28 @@
 
       let coucheMembres = L.layerGroup();
 
-      L.geoJSON(infoMembres, {
-        pointToLayer: function (feature, latlng) {
-          if (feature.properties.ICONE_SRC) {
-            return L.marker(latlng, {
-              icon: L.icon({
-                iconUrl: feature.properties.ICONE_SRC,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
-                popupAnchor: [-2, -2],
-              }),
-            });
-          } else {
-            console.log("Erreur: l'élément n'a pas d'icone définie");
-            return L.marker(latlng, {
-              icon: diamantIcone,
-            });
-          }
-        },
-      })
-        .bindPopup(function (layer) {
-          return `
+      const construireCoucheMembre = () => {
+        L.geoJSON(infoMembres, {
+          pointToLayer: function (feature, latlng) {
+            if (feature.properties.ICONE_SRC) {
+              return L.marker(latlng, {
+                icon: L.icon({
+                  iconUrl: feature.properties.ICONE_SRC,
+                  iconSize: [20, 20],
+                  iconAnchor: [10, 10],
+                  popupAnchor: [-2, -2],
+                }),
+              });
+            } else {
+              console.log("Erreur: l'élément n'a pas d'icone définie");
+              return L.marker(latlng, {
+                icon: diamantIcone,
+              });
+            }
+          },
+        })
+          .bindPopup(function (layer) {
+            return `
             <div class="card" style="width: 18rem">
         <h5 class="card-title">
           ${layer.feature.properties.NOM} - Fiche descriptive
@@ -245,17 +309,19 @@
         </div>
       </div>
             `;
-        })
-        .addTo(coucheMembres);
+          })
+          .addTo(coucheMembres);
+      };
 
       //Couches Feature
 
-      const tt = L.esri.featureLayer({
-        url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Earthquakes_Since1970/MapServer/0",
+      const ff = L.esri.featureLayer({
+        url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Wildfire/FeatureServer/0",
       });
+
       const overlays = {
-        "Tremblements de terre": tt,
-        "Membres": coucheMembres,
+        Membres: coucheMembres,
+        "Feux de forêt": ff,
       };
 
       L.control.scale({ imperial: false, maxWidth: 500 }).addTo(map);
@@ -289,6 +355,68 @@
           marqueur.addTo(couchePoints);
         }
       });
+      //Choix selon ancienneté
+      const requete = document.getElementById("requete");
+      // requete.addEventListener('change', ()=> coucheMembres.setWhere(requete.value));
+      // <option value="tous">Tous</option>
+      //     <option value="avant1990">
+      //       Avant 1990
+      //     </option>
+      //     <option value="9099">1990-1999</option>
+      //     <option value="0009">2000-2009</option>
+      //     <option value="1019">2010-2019</option>
+      //     <option value="ap2019">Après 2019</option>
+
+      // requete.addEventListener("change", () => {
+      //   // const valeurRequete = requete.value;
+      //   // L.geoJSON(infoMembres, {
+      //   //   filter: function (feature, layer) {
+      //   //     console.log(valeurRequete)
+      //   //     return feature.properties.valeurRequete;
+      //   //   },
+      //   // }).addTo(map);
+
+      //   switch (requete.value) {
+      //     case "tous":
+      //       L.geoJSON(infoMembres, {
+      //         filter: function (feature, layer) {
+      //           return feature.properties.tous;
+      //         },
+      //       }).addTo(map);
+      //       break;
+      //     case "avant1990":
+      //     L.geoJSON(infoMembres, {
+      //         filter: function (feature, layer) {
+      //           return feature.properties.avant1990;
+      //         },
+      //       }).addTo(map);
+      //   }
+      // });
+
+      // Nous localise
+
+      let localisation = document.getElementById("localisation");
+      localisation.addEventListener("click", function () {
+        localisation.disabled = true; // pour eviter le spam
+
+        map.on("locationfound", onLocationFound);
+        map.on("locationerror", onLocationError);
+
+        map.locate({ setView: true, maxZoom: 16 });
+      });
+
+      function onLocationFound(e) {
+        console.log(e.latlng);
+        let marqueur = L.marker(e.latlng)
+          .addTo(map)
+          .bindPopup("Je suis ici")
+          .openPopup();
+      }
+
+      function onLocationError(e) {
+        localisation.disabled = false;
+        alert(e.message);
+      }
     </script>
   </body>
 </html>
