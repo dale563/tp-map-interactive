@@ -1,1 +1,1 @@
-const cleAPI = "AAPK6a0b0e28eccb4f898f2f4bcf05f70cacZlqfXBxHS792ixVtFdeXvOeXvEalJE6D2byvWlYECBMYRrJetzUCww9bAL6tgpWV";
+const cleAPI = "";
